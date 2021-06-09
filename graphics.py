@@ -1,9 +1,10 @@
 import pyglet
-from pyglet.gl import(
-    Config,
-    glEnable, glBlendFunc, glLoadIdentity, glClearColor,
-    GL_BLEND, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_COLOR_BUFFER_BIT)
+from pyglet.gl import *
 from pyglet.window import key
+
+import boids as b
+import scene as s
+import camera as c
 
 def get_window_config():
     platform = pyglet.window.get_platform()
@@ -31,11 +32,37 @@ def setup():
 
     print('  Finished!\n')
 
-def mainloop():
+def event_func():
     global window    
 
     @window.event
     def on_draw():
-        glClearColor(0.1, 0.1, 0.1, 1.0)
         window.clear()
+        glClearColor(0.1, 0.1, 0.1, 1.0)
+
+        glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
+        gluPerspective(90, 1, 0.1, 100)
+
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+
+        c.apply()
+
+        s.draw()
+        glFlush()
+
+    @window.event
+    def on_key_press(signal, modifiers):
+        if signal == key.W:
+            c.update_translate([0, 0, -1])
+        elif signal == key.A:
+            c.update_translate([-1, 0, 0])
+        elif signal == key.S:
+            c.update_translate([0, 0, 1])
+        elif signal == key.D:
+            c.update_translate([1, 0, 0])
+        elif signal == key.Q:
+            c.update_rotate([3, 0, 0])
+        elif signal == key.E:
+            c.update_rotate([-3, 0 , 0])
