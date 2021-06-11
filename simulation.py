@@ -3,6 +3,8 @@ import graphics as g
 import boids as b
 import camera as c
 
+import ei.patched
+
 def setup():
     print('======================')
     print('==       setup      ==')

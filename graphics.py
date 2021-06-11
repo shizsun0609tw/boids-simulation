@@ -42,7 +42,7 @@ def event_func():
 
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(90, 1, 0.1, 100)
+        gluPerspective(120, 1, 0.1, 100)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
@@ -50,6 +50,8 @@ def event_func():
         c.apply()
 
         s.draw()
+        b.draw()
+
         glFlush()
 
     @window.event
@@ -66,3 +68,7 @@ def event_func():
             c.update_rotate([3, 0, 0])
         elif signal == key.E:
             c.update_rotate([-3, 0 , 0])
+        elif signal == key.Z:
+            c.update_rotate([0, 3, 0])
+        elif signal == key.C:
+            c.update_rotate([0, -3, 0])
