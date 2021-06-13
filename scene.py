@@ -18,6 +18,7 @@ def render_ground():
             glTranslatef(1, 0, 0)
 
             glBegin(GL_POLYGON)
+            glNormal3f(0, 1, 0)
             glVertex3f(-0.5, 0, -0.5)
             glVertex3f(-0.5, 0, 0.5)
             glVertex3f(0.5, 0, 0.5)

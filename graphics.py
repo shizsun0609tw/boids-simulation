@@ -30,6 +30,24 @@ def setup():
         caption="Boids Simulation",
         config=get_window_config())
 
+    glEnable(GL_DEPTH_TEST)
+    glDepthFunc(GL_LEQUAL)
+    glEnable(GL_CULL_FACE)
+    
+    glEnable(GL_LIGHTING)
+    glEnable(GL_LIGHT0)
+
+    glLightfv(GL_LIGHT0, GL_POSITION, (GLfloat*4)(0.0, 0.0, 0.0, 1))
+    glLightfv(GL_LIGHT0, GL_AMBIENT,  (GLfloat*4)(0.3, 0.3, 0.3, 1))
+    glLightfv(GL_LIGHT0, GL_DIFFUSE,  (GLfloat*4)(0.5, 0.5, 0.5, 1))
+    glLightfv(GL_LIGHT0, GL_SPECULAR, (GLfloat*4)(1.0, 1.0, 1.0, 1))
+
+    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
+    glEnable(GL_COLOR_MATERIAL)
+    glShadeModel(GL_SMOOTH)
+    
+    glLineWidth(2.0)
+
     print('  Finished!\n')
 
 def event_func():
@@ -42,7 +60,7 @@ def event_func():
 
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        gluPerspective(120, 1, 0.1, 100)
+        gluPerspective(100, 1, 0.1, 100)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
