@@ -5,21 +5,7 @@ from pyglet.window import key
 import boids as b
 import scene as s
 import camera as c
-
-def get_window_config():
-    platform = pyglet.window.get_platform()
-    display = platform.get_default_display()
-    screen = display.get_default_screen()
-
-    template = Config(double_buffer=True, sample_buffers=1, samples=4)
-
-    try:
-        config = screen.get_best_config(template)
-    except pyglet.window.NoSuchConfigException:
-        template = Config()
-        config = screen.get_best_config(template)
-
-    return config
+import gui as u
 
 def setup():
     print('Start to setup graphics ...', end=' ')
@@ -28,7 +14,7 @@ def setup():
     window = pyglet.window.Window(
         fullscreen=False,
         caption="Boids Simulation",
-        config=get_window_config())
+        width=1280, height=960)
 
     glEnable(GL_DEPTH_TEST)
     glDepthFunc(GL_LEQUAL)
@@ -46,9 +32,20 @@ def setup():
     glEnable(GL_COLOR_MATERIAL)
     glShadeModel(GL_SMOOTH)
     
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    
     glLineWidth(2.0)
 
-    print('  Finished!\n')
+    print('  Finished!\n\n')
+
+    print('=============================')
+    print('Key input:')
+    print('\t[W, S]: forward, backward')
+    print('\t[A, D]: left, right')
+    print('\t[Q, E]: pitch')
+    print('\t[Z, C]: yaw')
+    print('=============================')
 
 def event_func():
     global window    
@@ -58,18 +55,21 @@ def event_func():
         window.clear()
         glClearColor(0.1, 0.1, 0.1, 1.0)
 
+        glEnable(GL_DEPTH_TEST)
+        
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         gluPerspective(100, 1, 0.1, 100)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-
+        
         c.apply()
 
         s.draw()
         b.draw()
-
+        u.draw()
+        
         glFlush()
 
     @window.event
@@ -90,3 +90,8 @@ def event_func():
             c.update_rotate([0, 3, 0])
         elif signal == key.C:
             c.update_rotate([0, -3, 0])
+
+    @window.event
+    def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
+        if buttons & pyglet.window.mouse.LEFT:
+            u.handle_mouse(x, y, dx, dy)

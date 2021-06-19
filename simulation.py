@@ -2,6 +2,7 @@ import pyglet
 import graphics as g
 import boids as b
 import camera as c
+import gui as u
 
 #import ei.patched
 
@@ -13,6 +14,7 @@ def setup():
     c.setup()
     b.setup()
     g.setup()
+    u.setup()
 
 def mainloop():
     print('======================')

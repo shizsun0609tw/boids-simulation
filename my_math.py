@@ -20,7 +20,7 @@ def normalized(v):
 
 def limit_velocity(v, max_v, min_v):
     mag = magnitude(v)
-
+    
     if mag > max_v:
         return [v[i] * (max_v / mag) for i in range(3)]
     elif mag < min_v:

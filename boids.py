@@ -2,19 +2,16 @@ import math
 import my_math
 import random
 import numpy as np
+import gui as u
 from pyglet.gl import *
 from mathutils import Vector
 
-BOID_NEARBY_THRESH = 2
-BOID_SEPARATION_DIS = 0.75
-BOID_MAX_VELOCITY = 3
-BOID_MIN_VELOCITY = 1
+BOID_NEARBY_THRESH = 1.25
+BOID_SEPARATION_DIS = 1
 
-BOID_TRACK_DIS = 0.3
+BOID_TRACK_DIS = 0.15
 
-cohesion_factor = 0.03
-separation_factor = 0.25
-alignment_factor = 0.045
+bound_avoid_factor = 2
 
 class Boid:
     def __init__(self):
@@ -39,26 +36,28 @@ def setup():
         for j in range(3):
             boid[i].position[j] = random.randrange(-50000, 50000) / 10000
             boid[i].velocity[j] = random.randrange(-30000, 30000) / 10000
+            boid[i].color[j] = random.randrange(0, 100) / 100
     print('  Finished!\n')
 
 def draw_boid_unit():
-    glColor3f(0, 0, 1)
     sphere = gluNewQuadric()
     gluSphere(sphere, 0.25, 10, 10)
 
 def draw_boid_tracker(boid_unit):
+    glDisable(GL_LIGHTING)
     glColor3f(0.8, 0.8, 0.5)
     glPointSize(2.5)
     for t in boid_unit.tracker:
         glBegin(GL_POINTS)
         glVertex3f(*[t[i] - boid_unit.position[i] for i in range(3)])
         glEnd()
+    glEnable(GL_LIGHTING)
 
 def draw_foward(boid_unit):
     glColor3f(0, 1, 0)
     glBegin(GL_LINES)
     glVertex3f(0, 0, 0)
-    forward = [my_math.normalized(boid_unit.velocity)[j] for j in range(3)]
+    forward = [my_math.normalized(boid_unit.velocity)[j] * 0.5 for j in range(3)]
     glVertex3f(*forward)
     glEnd()
 
@@ -72,6 +71,8 @@ def draw():
 
         #draw_foward(boid[i])
         draw_boid_tracker(boid[i])
+        
+        glColor3f(*boid[i].color)
         draw_boid_unit()
 
         glPopMatrix()
@@ -79,6 +80,7 @@ def draw():
 def cal_nearby_boids(target_boid):
     global boid
     
+    nearby_distance = u.get_parameter('Nearby_dis')
     res = []
     for boid_unit in boid:
         if boid_unit == target_boid:
@@ -86,7 +88,7 @@ def cal_nearby_boids(target_boid):
         else:
             dis = my_math.distance(target_boid.position, boid_unit.position)
             
-            if dis < BOID_NEARBY_THRESH:
+            if dis < nearby_distance:
                 res.append(boid_unit)
 
     return res    
@@ -103,9 +105,11 @@ def cal_cohesion(target_boid, nearby_boids):
 
 def cal_separation(target_boid, nearby_boids):
     # rule 2
+    boids_dis = u.get_parameter('Boids_dis')
+    
     c = [0, 0, 0]
     for boid_unit in nearby_boids:
-        if my_math.distance(boid_unit.position, target_boid.position) < BOID_SEPARATION_DIS:
+        if my_math.distance(boid_unit.position, target_boid.position) < boids_dis:
             c = [c[i] - (boid_unit.position[i] - target_boid.position[i]) for i in range(3)]
 
     return c
@@ -120,6 +124,17 @@ def cal_alignment(target_boid, nearby_boids):
 
     return [avg_velocity[i] - target_boid.velocity[i] for i in range(3)]
 
+def cal_bound_collision_avoid(target_boid):
+    pred_delta_time = 0.75
+    pred_pos = [target_boid.position[i] + target_boid.velocity[i] * pred_delta_time for i in range(3)]
+
+    res = [0, 0, 0]
+    for i in range(3):
+        if pred_pos[i] >= target_boid.bound[i] or pred_pos[i] <= -target_boid.bound[i]:
+            res[i] = -target_boid.velocity[i]
+
+    return res
+
 def append_tracker(boid_unit):
     tracker_num = 5
     if len(boid_unit.tracker) > 5:
@@ -130,6 +145,13 @@ def append_tracker(boid_unit):
 def update(delta_time):
     global boid
 
+    cohesion_factor = u.get_parameter('Cohesion')
+    separation_factor = u.get_parameter('Separation')
+    alignment_factor = u.get_parameter('Alignment')
+
+    max_velocity = u.get_parameter('Max_V')
+    min_velocity = u.get_parameter('Min_V')
+
     for i in range(len(boid)):
         nearby_boids = cal_nearby_boids(boid[i])
 
@@ -139,13 +161,16 @@ def update(delta_time):
             cohesion = cal_cohesion(boid[i], nearby_boids)
             separation = cal_separation(boid[i], nearby_boids)
             alignment = cal_alignment(boid[i], nearby_boids)
+            bound_avoid = cal_bound_collision_avoid(boid[i])
 
             boid[i].acceleration =  \
                 [ cohesion_factor   * cohesion[i] 
                 + separation_factor * separation[i] 
                 + alignment_factor  * alignment[i] for i in range(3)]
+        
+        bound_avoid = cal_bound_collision_avoid(boid[i])
+        boid[i].acceleration = [boid[i].acceleration[j] + bound_avoid_factor * bound_avoid[j] for j in range(3)]
 
-    fixed_dis = 0.5
     for i in range(len(boid)):
         boid[i].time += delta_time
 
@@ -154,14 +179,6 @@ def update(delta_time):
             append_tracker(boid[i])
 
         boid[i].velocity = [boid[i].velocity[j] + boid[i].acceleration[j] for j in range(3)]
-        my_math.limit_velocity(boid[i].velocity, BOID_MAX_VELOCITY, BOID_MIN_VELOCITY)
-
+        boid[i].velocity = my_math.limit_velocity(boid[i].velocity, max_velocity, min_velocity)
+                
         boid[i].position = [boid[i].position[j] + delta_time * boid[i].velocity[j] for j in range(3)]
-
-        for j in range(3):
-            if boid[i].position[j] >= boid[i].bound[j]:
-                boid[i].position[j] = boid[i].bound[j] - fixed_dis
-                boid[i].velocity[j] *= -1
-            elif boid[i].position[j] <= -boid[i].bound[j]:
-                boid[i].position[j] = -boid[i].bound[j] + fixed_dis
-                boid[i].velocity[j] *= -1
