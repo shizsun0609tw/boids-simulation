@@ -3,6 +3,7 @@ import graphics as g
 import boids as b
 import camera as c
 import gui as u
+import obstacle as o
 
 #import ei.patched
 
@@ -15,6 +16,7 @@ def setup():
     b.setup()
     g.setup()
     u.setup()
+    o.setup()
 
 def mainloop():
     print('======================')

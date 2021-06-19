@@ -99,13 +99,6 @@ def draw_control_bar(control_bar):
     control_bar.value_label.draw()
 
 def draw():
-    label = pyglet.text.Label('Hello, world',
-                        font_name='Times New Roman',
-                        font_size=36,
-                        color=(255, 0, 0, 255),
-                        x=width//2, y=height//2,
-                        anchor_x='center', anchor_y='center')
-
     glDisable(GL_DEPTH_TEST)
     glDisable(GL_LIGHTING)
     

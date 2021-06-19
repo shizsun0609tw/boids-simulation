@@ -3,6 +3,7 @@ import my_math
 import random
 import numpy as np
 import gui as u
+import obstacle as o
 from pyglet.gl import *
 from mathutils import Vector
 
@@ -12,6 +13,7 @@ BOID_SEPARATION_DIS = 1
 BOID_TRACK_DIS = 0.15
 
 bound_avoid_factor = 2
+obstacle_avoid_factor = 2
 
 class Boid:
     def __init__(self):
@@ -135,6 +137,20 @@ def cal_bound_collision_avoid(target_boid):
 
     return res
 
+def cal_obstacle_collision_avoid(target_boid):
+    pred_delta_time = 0.5
+    pred_pos = [target_boid.position[i] + target_boid.velocity[i] * pred_delta_time for i in range(3)]
+
+    obstacles = o.get_obstacles()
+    res = [0, 0, 0]
+    for obstacle in obstacles:
+            if abs(obstacle.pos[0] - pred_pos[0]) < obstacle.size and \
+                abs(obstacle.pos[1] - pred_pos[1]) < obstacle.size and \
+                abs(obstacle.pos[2] - pred_pos[2]) < obstacle.size:
+                res = [res[i] + random.randrange(0, 100) / 100 * (-target_boid.velocity[i]) for i in range(3)]
+
+    return res
+
 def append_tracker(boid_unit):
     tracker_num = 5
     if len(boid_unit.tracker) > 5:
@@ -161,15 +177,15 @@ def update(delta_time):
             cohesion = cal_cohesion(boid[i], nearby_boids)
             separation = cal_separation(boid[i], nearby_boids)
             alignment = cal_alignment(boid[i], nearby_boids)
-            bound_avoid = cal_bound_collision_avoid(boid[i])
-
+            
             boid[i].acceleration =  \
                 [ cohesion_factor   * cohesion[i] 
                 + separation_factor * separation[i] 
                 + alignment_factor  * alignment[i] for i in range(3)]
         
         bound_avoid = cal_bound_collision_avoid(boid[i])
-        boid[i].acceleration = [boid[i].acceleration[j] + bound_avoid_factor * bound_avoid[j] for j in range(3)]
+        obstacle_avoid = cal_obstacle_collision_avoid(boid[i])
+        boid[i].acceleration = [boid[i].acceleration[j] + bound_avoid_factor * bound_avoid[j] + obstacle_avoid_factor * obstacle_avoid[j] for j in range(3)]
 
     for i in range(len(boid)):
         boid[i].time += delta_time

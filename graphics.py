@@ -6,6 +6,7 @@ import boids as b
 import scene as s
 import camera as c
 import gui as u
+import obstacle as o
 
 def setup():
     print('Start to setup graphics ...', end=' ')
@@ -48,8 +49,6 @@ def setup():
     print('=============================')
 
 def event_func():
-    global window    
-
     @window.event
     def on_draw():
         window.clear()
@@ -68,8 +67,9 @@ def event_func():
 
         s.draw()
         b.draw()
+        o.draw()
         u.draw()
-        
+
         glFlush()
 
     @window.event
